@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { triageEmergency, type EmergencyType } from "../../../lib/triage";
 import { buildResponsePlan } from "../../../lib/responsePlan";
+import { executeResponsePlan } from "../../../lib/executors/executeResponsePlan";
+
 
 export const runtime = "nodejs";
 
@@ -8,7 +10,10 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as {
     emergencyType: EmergencyType;
     location?: string;
+    execute?: boolean;
   };
+
+
 
   console.log("/api/intake POST payload:", payload);
 
@@ -19,7 +24,13 @@ export async function POST(request: Request) {
 
   const incidentId = crypto.randomUUID();
   const responsePlan = buildResponsePlan(incidentId, decision);
+  
+  const shouldExecute = payload.execute === true;
+  let executionResults = null;
 
+  if (shouldExecute) {
+    executionResults = await executeResponsePlan(responsePlan);
+  }
 
   return NextResponse.json({
     success: true,
@@ -28,8 +39,11 @@ export async function POST(request: Request) {
       urgency: decision.urgency,
       dispatchDrone: decision.dispatchDrone,
       estimatedMinutesSaved: decision.estimatedMinutesSaved,
-      bystanderInstructions: [...decision.bystanderInstructions]
+      bystanderInstructions: [...decision.bystanderInstructions],
     },
-    responsePlan
+    responsePlan,
+    execution: executionResults, // ← THIS LINE WAS MISSING
   });
+  
+  
 }
