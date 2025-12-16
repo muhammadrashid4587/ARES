@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { triageEmergency, type EmergencyType } from "../../../lib/triage";
+import { buildResponsePlan } from "../../../lib/responsePlan";
+
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
@@ -16,6 +18,8 @@ export async function POST(request: Request) {
   });
 
   const incidentId = crypto.randomUUID();
+  const responsePlan = buildResponsePlan(incidentId, decision);
+
 
   return NextResponse.json({
     success: true,
@@ -25,6 +29,7 @@ export async function POST(request: Request) {
       dispatchDrone: decision.dispatchDrone,
       estimatedMinutesSaved: decision.estimatedMinutesSaved,
       bystanderInstructions: [...decision.bystanderInstructions]
-    }
+    },
+    responsePlan
   });
 }
