@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // allow sqlite if DATABASE_URL switches
+  url      = env("DATABASE_URL")
+}
+
+model Incident {
+  id           String   @id
+  emergencyType String
+  location     String
+  urgency      String
+  dispatchDrone Boolean
+  estimatedMinutesSaved Int
+
+  bystanderInstructions Json
+  responsePlan          Json
+
+  jobId        String?
+  createdByOperatorId String?
+  createdByRole       String?
+  ownerOperatorId     String?
+
+  abortRequestedAt    DateTime?
+  abortRequestedBy    String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  executions   ExecutionEvent[]
+  events       IncidentEvent[]
+  audits       AuditLogEntry[]
+}
+
+model ExecutionEvent {
+  id          String   @id @default(uuid())
+  incidentId  String
+  actionType  String
+  success     Boolean
+  message     String
+  executedAt  DateTime @default(now())
+  operatorId  String?
+  operatorRole String?
+
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+}
+
+model IncidentEvent {
+  id         String   @id @default(uuid())
+  incidentId String
+  type       String
+  timestamp  DateTime @default(now())
+  payload    Json
+  operatorId String?
+  operatorRole String?
+
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@index([incidentId, timestamp])
+}
+
+model AuditLogEntry {
+  id            String   @id @default(uuid())
+  incidentId    String
+  timestamp     DateTime @default(now())
+  operatorId    String
+  operatorRole  String
+  actionType    String
+  payloadSummary Json
+  success       Boolean
+
+  incident      Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId])
+  @@index([incidentId, timestamp])
+}
