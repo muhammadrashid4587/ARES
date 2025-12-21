@@ -1,3 +1,10 @@
+/**
+ * ⚠️ FROZEN CORE MODULE
+ * Do not modify without explicit architectural reason.
+ * Stable as of ares-v0-intake-triage.
+ */
+
+
 export type EmergencyType =
   | "Cardiac Arrest"
   | "Severe Bleeding"
